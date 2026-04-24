@@ -255,7 +255,7 @@ static void render_chart(FILE *out) {
     for (int i = 0; i < g_result_count; i++) {
         bench_result_t *r = &g_results[i];
         if (strcmp(r->method, prev_method) != 0) {
-            strncpy(prev_method, r->method, sizeof(prev_method) - 1);
+            snprintf(prev_method, sizeof(prev_method), "%s", r->method);
             fprintf(out, "\n  [%s]\n", r->method);
         }
         int bar_len = (int)((r->speedup / max_sp) * BAR_WIDTH);
@@ -541,7 +541,7 @@ static void run_benchmark(const char *name, const char *desc,
                            ? (agg.mean_cpu / (agg.mean_wall * t) * 100.0) : 0.0;
 
         /* Таблиця */
-        char correctness[16];
+        char correctness[24];
         if (agg.errors == 0)
             snprintf(correctness, sizeof(correctness), "%ld", n_ops);
         else
