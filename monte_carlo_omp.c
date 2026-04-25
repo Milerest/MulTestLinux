@@ -560,34 +560,9 @@ int main(int argc, char *argv[]) {
         log_write(LOG_INFO, "Буфер очищення кешу виділено: %d МБ", CACHE_FLUSH_MB);
     }
 
-    /* Список конфігурацій потоків: степені двійки + 3/4*max + max */
-    int thread_counts[MAX_THREAD_STEPS + 2];
-    int num_configs = 0;
-
-    for (int t = 1; t <= max_threads && num_configs < MAX_THREAD_STEPS; t *= 2)
-        thread_counts[num_configs++] = t;
-
-    if (max_threads > 2) {
-        int tq = max_threads * 3 / 4;
-        if (tq % 2 != 0) tq++;
-        if (tq > 1 && tq < max_threads) {
-            int dup = 0;
-            for (int i = 0; i < num_configs; i++)
-                if (thread_counts[i] == tq) { dup = 1; break; }
-            if (!dup && num_configs < MAX_THREAD_STEPS + 1) {
-                int pos = num_configs;
-                for (int i = 0; i < num_configs; i++)
-                    if (thread_counts[i] > tq) { pos = i; break; }
-                memmove(&thread_counts[pos+1], &thread_counts[pos],
-                        (size_t)(num_configs - pos) * sizeof(int));
-                thread_counts[pos] = tq;
-                num_configs++;
-            }
-        }
-    }
-    if (thread_counts[num_configs-1] != max_threads &&
-        num_configs < MAX_THREAD_STEPS + 2)
-        thread_counts[num_configs++] = max_threads;
+    /* Тест лише з 10 потоками */
+    int thread_counts[] = { 10 };
+    int num_configs = 1;
 
     print_header();
     printf("  Вибірок:        %ld\n", n);
