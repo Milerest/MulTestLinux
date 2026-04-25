@@ -435,10 +435,12 @@ static run_stat_t run_lock(long n_items, int total_threads) {
         int tid = omp_get_thread_num();
 
         if (tid < np) {
-            /* ── Виробник ── */
-            for (;;) {
-                long item = __atomic_fetch_add(&g_next_item, 1L, __ATOMIC_RELAXED);
-                if (item >= n_items) break;
+            /* ── Виробник — статичний розподіл діапазону ── */
+            long chunk = (n_items + np - 1) / np;
+            long start = tid * chunk;
+            long end   = start + chunk;
+            if (end > n_items) end = n_items;
+            for (long item = start; item < end; item++) {
                 while (!lkq_enqueue(&g_lkq, item)) { /* spin */ }
             }
             /* Останній виробник надсилає poison-pill кожному споживачу */
@@ -940,7 +942,7 @@ int main(int argc, char *argv[]) {
     double bl_arr[N_RUNS];
     for (int r = 0; r < N_RUNS; r++) {
         flush_cache();
-        run_stat_t rs = run_sequential(n_items);
+        run_stat_t rs = run_lock(n_items, 2);
         bl_arr[r] = rs.throughput;
         printf("."); fflush(stdout);
     }
